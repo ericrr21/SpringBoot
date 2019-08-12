@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.MyBatis.dao.JoinMapper">
+
+	<select id="test" resultType="map">
+		-- Declaracion de Variables
+		DECLARE
+		@columns nvarchar(MAX),
+		@query nvarchar(MAX),
+		@PARAM_Fecha_INI
+		nVARCHAR(max),
+		@PARAMETROS_QUERI nVARCHAR(max),
+		@PARAM_Fecha_FIN
+		nVARCHAR(max);
+
+		-- Valor de Variables
+		SET @PARAMETROS_QUERI = N'@FechaINI
+		VARCHAR(MAX),@FechaFIN VARCHAR(MAX)';
+		SET @PARAM_Fecha_INI =
+		'2019-06-03';
+		SET @PARAM_Fecha_FIN = '2019-08-07';
+		-- STUFF () elimina
+		una parte de una cadena y luego inserta otra parte
+		en la cadena
+		STUFF(string, start, length, new_string)
+		-- QUOTENAME delimiters "[]"
+		--Return a specified part of a date wk-> semana, year, (day, dy, y =
+		Day)
+		--FOR XML PATH('') -> Return XML
+		SET @columns = STUFF((SELECT
+		','+QUOTENAME(cast(datepart(wk,Sales_Date)
+		as varchar(4)))
+		FROM
+		SellOutRetailers sell
+		JOIN Retails ret on(sell.Id_Retail =
+		ret.id_Retail)
+		JOIN HOMOLOGACION_LOCALES hl on (hl.Brand_Customer =
+		sell.Id_Store)
+		JOIN HOMOLOGACION_PRODUCTOS hp on (hp.UPCELC = sell.UPC)
+		WHERE sell.Sales_Date BETWEEN @PARAM_Fecha_INI and @PARAM_Fecha_FIN
+		GROUP by datepart(wk,sell.Sales_Date) FOR XML PATH(''), TYPE
+		).value('.', 'nvarchar(max)'), 1, 1, '');
+
+		SET @query = 'WITH CTE_A AS (
+		SELECT ret.[Description] as [retailer2],
+		sum(Amount) as
+		Amount2,cast(datepart(wk,Sales_Date) as varchar(4))
+		fecha
+		FROM
+		(SellOutRetailers sell JOIN Retails ret on(sell.Id_Retail =
+		ret.id_Retail)
+		JOIN HOMOLOGACION_LOCALES hl on (hl.Brand_Customer =
+		sell.Id_Store)
+		JOIN HOMOLOGACION_PRODUCTOS hp on (hp.UPCELC = sell.UPC)
+		)
+		WHERE sell.Sales_Date BETWEEN @FechaINI and @FechaFIN
+		GROUP by
+		ret.Description , cast(datepart(wk,sell.Sales_Date) as
+		varchar(4)))
+		SELECT * FROM CTE_A PIVOT (SUM(Amount2) for fecha in ('+@columns+'))
+		p'
+
+		EXECUTE sp_executesql @query,@PARAMETROS_QUERI,
+		@FechaINI=@PARAM_Fecha_INI,@FechaFIN=@PARAM_Fecha_FIN;
+	</select>
+
+	<select id="Columns" resultType="map">
+		-- Declaracion de Variables
+		DECLARE @query nvarchar(MAX),
+		@PARAM_Fecha_INI nVARCHAR(max),
+		@PARAMETROS_QUERI nVARCHAR(max),
+		@PARAM_Fecha_FIN nVARCHAR(max);
+
+		-- Valor de Variables
+		SET @PARAMETROS_QUERI = N'@FechaINI VARCHAR(MAX),@FechaFIN VARCHAR(MAX)';
+		SET @PARAM_Fecha_INI = '2019-06-03';
+		SET @PARAM_Fecha_FIN = '2019-08-07';
+
+
+
+		SET @query = 'SELECT cast(datepart(wk,Sales_Date) as varchar(4))
+		FROM SellOutRetailers sell
+		JOIN Retails ret on(sell.Id_Retail = ret.id_Retail)
+		JOIN HOMOLOGACION_LOCALES hl on (hl.Brand_Customer = sell.Id_Store)
+		JOIN HOMOLOGACION_PRODUCTOS hp on (hp.UPCELC = sell.UPC)
+		WHERE sell.Sales_Date BETWEEN @FechaINI and @FechaFIN
+		GROUP by datepart(wk,sell.Sales_Date) '
+
+		EXECUTE sp_executesql @query,@PARAMETROS_QUERI,
+		@FechaINI=@PARAM_Fecha_INI,@FechaFIN=@PARAM_Fecha_FIN;
+
+	</select>
+</mapper>

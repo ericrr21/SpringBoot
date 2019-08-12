@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+
+<mapper namespace="com.MyBatis.dao.UsuarioMapper">
+
+	<resultMap id="miBase22" type="com.MyBatis.persistence.mybatis.entities.UsuarioEntity">
+		<id column="idUsuario" property="idUsuario" jdbcType="INTEGER" />
+		<result property = "nombre" column = "nombre" jdbcType="VARCHAR" />
+		<result property = "apellido" column = "apellido" jdbcType="VARCHAR" />
+		<result property = "edad" column = "edad" jdbcType="INTEGER" />
+	</resultMap>
+
+	<select id="selectAll" resultMap = "miBase22">
+		select * from usuarios
+  	</select>
+  	
+  	<select id="selectId" resultMap="miBase22"  resultType="com.MyBatis.persistence.mybatis.entities.UsuarioEntity" parameterType="com.MyBatis.dto.ParamsQuery">
+  		select * from usuarios where idUsuario = ${id}
+  	</select>
+
+</mapper>
